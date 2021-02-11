@@ -369,8 +369,10 @@ hello.utils.extend(hello, {
 
 		}
 
-		// Convert state to a string
-		p.qs.state = encodeURIComponent(JSON.stringify(p.qs.state));
+		// Convert state to a string will use Base64 encoding of state_encoding is set to base64
+		p.qs.state = provider.oauth && provider.oauth.state_encoding === 'base64'
+			? btoa(JSON.stringify(p.qs.state))
+			: encodeURIComponent(JSON.stringify(p.qs.state));
 
 		// URL
 		if (parseInt(provider.oauth.version, 10) === 1) {
@@ -1295,6 +1297,11 @@ hello.utils.extend(hello.utils, {
 
 		// OAuth2 or OAuth1 server response?
 		if (p && p.state && (p.code || p.oauth_token)) {
+
+			// Reverse base64 encoding of state string that we sent to provider.
+			if (p.state.substring(0,3) === 'eyJ') {
+				p.state = atob(p.state);
+			}
 
 			var state = JSON.parse(p.state);
 
